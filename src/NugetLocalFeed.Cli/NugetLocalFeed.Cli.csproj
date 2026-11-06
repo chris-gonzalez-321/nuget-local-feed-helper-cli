@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>NugetLocalFeed.Cli</RootNamespace>
+
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>nuget-lf</ToolCommandName>
+    <PackageId>NugetLocalFeed.Cli</PackageId>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NuGet.Versioning" Version="7.9.0" />
+    <PackageReference Include="Spectre.Console.Cli" Version="0.55.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NugetLocalFeed.Cli.Tests" />
+  </ItemGroup>
+
+</Project>
