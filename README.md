@@ -17,7 +17,8 @@ dotnet tool install --global --add-source ./nupkg NugetLocalFeed.Cli
 ```bash
 nuget-lf settings import global settings.user.json
 nuget-lf settings import repo settings.sob.json          # stored as "sob" (or pass --name)
-nuget-lf settings view
+nuget-lf settings view                                   # global settings + list of repos
+nuget-lf settings view <repo-name>                       # one repo: solution dir, source file, packages
 nuget-lf settings refresh global                         # re-import from the last file imported
 nuget-lf settings refresh repo [name]                    # same for one repo (or all if omitted)
 nuget-lf settings set environment <repo-name>            # change the default repo in global settings

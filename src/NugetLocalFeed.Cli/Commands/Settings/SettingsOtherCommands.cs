@@ -48,11 +48,21 @@ public sealed class ValidateCommand : Command<ValidateSettings>
     }
 }
 
-public sealed class ViewSettingsCommand : Command<EmptyCommandSettings>
+public sealed class ViewSettingsSettings : CommandSettings
 {
-    protected override int Execute(CommandContext context, EmptyCommandSettings settings, CancellationToken cancellationToken)
+    [CommandArgument(0, "[REPO]")]
+    [System.ComponentModel.Description("Show the details of this imported repo instead of the overview.")]
+    public string? Repo { get; init; }
+}
+
+public sealed class ViewSettingsCommand : Command<ViewSettingsSettings>
+{
+    protected override int Execute(CommandContext context, ViewSettingsSettings settings, CancellationToken cancellationToken)
     {
         var store = SettingsStore.CreateDefault();
+
+        if (settings.Repo is not null) return ViewRepo(store, settings.Repo);
+
         AnsiConsole.MarkupLineInterpolated($"Settings folder: {store.RootDirectory}\n");
 
         try
@@ -78,6 +88,45 @@ public sealed class ViewSettingsCommand : Command<EmptyCommandSettings>
         }
 
         return 0;
+    }
+
+    private static int ViewRepo(SettingsStore store, string name)
+    {
+        try
+        {
+            var repo = store.LoadRepo(name);
+            var global = store.TryLoadGlobal();
+
+            AnsiConsole.MarkupLineInterpolated($"[bold]{name.ToLowerInvariant()}[/]");
+            AnsiConsole.MarkupLineInterpolated($"  PackagesSolutionDirectory: {repo.PackagesSolutionDirectory}");
+            AnsiConsole.MarkupLineInterpolated($"  Source file:               {store.GetRepoSource(name) ?? "(unknown)"}");
+            AnsiConsole.WriteLine();
+
+            var table = new Table().AddColumn("#").AddColumn("PkgName").AddColumn("PkgAssemblyName").AddColumn("Project");
+            for (var i = 0; i < repo.Packages!.Count; i++)
+            {
+                var pkg = repo.Packages[i];
+                string project;
+                try
+                {
+                    project = RepoPathResolver.ResolveProjectPath(repo, pkg, global?.BuildConfiguration ?? "Debug");
+                }
+                catch (InvalidOperationException ex)
+                {
+                    project = "(" + ex.Message + ")";
+                }
+
+                table.AddRow((i + 1).ToString(), Markup.Escape(pkg.PkgName!), Markup.Escape(pkg.PkgAssemblyName!), Markup.Escape(project));
+            }
+
+            AnsiConsole.Write(table);
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            AnsiConsole.MarkupLineInterpolated($"[red]Error:[/] {ex.Message}");
+            return 1;
+        }
     }
 }
 

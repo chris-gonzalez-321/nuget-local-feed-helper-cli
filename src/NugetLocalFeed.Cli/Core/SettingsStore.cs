@@ -37,6 +37,13 @@ public sealed class SettingsStore(string rootDirectory)
         return result.IsValid ? result.Value! : throw new SettingsValidationException(GlobalPath, result.Errors);
     }
 
+    /// <summary>Like <see cref="LoadGlobal"/> but returns null when missing or invalid.</summary>
+    public GlobalSettings? TryLoadGlobal()
+    {
+        try { return LoadGlobal(); }
+        catch (Exception ex) when (ex is InvalidOperationException or SettingsValidationException) { return null; }
+    }
+
     public void SaveRepo(string name, RepoSettings settings) =>
         WriteAtomic(RepoPath(name), JsonSerializer.Serialize(settings, SettingsParser.WriteOptions));
 
