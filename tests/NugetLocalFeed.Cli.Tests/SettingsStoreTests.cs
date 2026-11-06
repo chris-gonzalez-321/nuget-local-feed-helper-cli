@@ -53,4 +53,30 @@ public sealed class SettingsStoreTests : IDisposable
             $$"""{ "PackagesSolutionDirectory": "{{_abs.Replace("\\", "\\\\")}}", "Packages": [ { "PkgName": "A", "PkgAssemblyName": "../../x", "ProjectPath": "A" } ] }""");
         Assert.Throws<SettingsValidationException>(() => store.LoadRepo("bad"));
     }
+
+    [Fact]
+    public void Sources_AreRecordedPerKind_AndClearedOnRepoRemoval()
+    {
+        var store = new SettingsStore(_root);
+        Assert.Null(store.GetGlobalSource());
+
+        store.RecordGlobalSource("a/global.json");
+        store.RecordRepoSource("SOB", "b/sob.json");
+        store.SaveRepo("sob", new RepoSettings { PackagesSolutionDirectory = _abs, Packages = [new() { PkgName = "A", PkgAssemblyName = "A", ProjectPath = "A" }] });
+
+        Assert.Equal(Path.GetFullPath("a/global.json"), store.GetGlobalSource());
+        Assert.Equal(Path.GetFullPath("b/sob.json"), store.GetRepoSource("sob"));
+
+        store.RemoveRepo("sob");
+        Assert.Null(store.GetRepoSource("sob"));
+        Assert.NotNull(store.GetGlobalSource());
+    }
+
+    [Fact]
+    public void CorruptSourcesFile_IsIgnored()
+    {
+        var store = new SettingsStore(_root);
+        File.WriteAllText(store.SourcesPath, "not json");
+        Assert.Null(store.GetGlobalSource());
+    }
 }

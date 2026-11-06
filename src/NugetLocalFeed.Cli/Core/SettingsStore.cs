@@ -13,6 +13,7 @@ public sealed class SettingsStore(string rootDirectory)
 {
     public string RootDirectory { get; } = rootDirectory;
     public string GlobalPath => Path.Combine(RootDirectory, "global.json");
+    public string SourcesPath => Path.Combine(RootDirectory, "sources.json");
     public string ReposDirectory => Path.Combine(RootDirectory, "repos");
 
     public static SettingsStore CreateDefault()
@@ -63,7 +64,41 @@ public sealed class SettingsStore(string rootDirectory)
         var path = RepoPath(name);
         if (!File.Exists(path)) return false;
         File.Delete(path);
+        RecordSource(RepoSourceKey(name), null);
         return true;
+    }
+
+    public bool RepoExists(string name) => File.Exists(RepoPath(name));
+
+    // --- "last uploaded file" tracking, used by `settings refresh` ---------------------------
+
+    private const string GlobalSourceKey = "global";
+    private static string RepoSourceKey(string name) => "repo:" + name.ToLowerInvariant();
+
+    public void RecordGlobalSource(string file) => RecordSource(GlobalSourceKey, Path.GetFullPath(file));
+    public void RecordRepoSource(string name, string file) => RecordSource(RepoSourceKey(name), Path.GetFullPath(file));
+    public string? GetGlobalSource() => ReadSources().GetValueOrDefault(GlobalSourceKey);
+    public string? GetRepoSource(string name) => ReadSources().GetValueOrDefault(RepoSourceKey(name));
+
+    private Dictionary<string, string> ReadSources()
+    {
+        try
+        {
+            return File.Exists(SourcesPath)
+                ? JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(SourcesPath)) ?? []
+                : [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    private void RecordSource(string key, string? file)
+    {
+        var sources = ReadSources();
+        if (file is null) sources.Remove(key); else sources[key] = file;
+        WriteAtomic(SourcesPath, JsonSerializer.Serialize(sources, SettingsParser.WriteOptions));
     }
 
     private string RepoPath(string name)

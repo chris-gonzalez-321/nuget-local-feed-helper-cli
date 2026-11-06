@@ -30,6 +30,18 @@ app.Configure(config =>
             import.AddCommand<ImportGlobalCommand>("global").WithDescription("Import global settings (build config, version, feed path).");
             import.AddCommand<ImportRepoCommand>("repo").WithDescription("Import repo settings (solution directory and packages).");
         });
+        settings.AddBranch("refresh", refresh =>
+        {
+            refresh.SetDescription("Re-import settings from the file that was last imported.");
+            refresh.AddCommand<RefreshGlobalCommand>("global").WithDescription("Refresh global settings from the last imported file.");
+            refresh.AddCommand<RefreshRepoCommand>("repo").WithDescription("Refresh one repo (or all) from the last imported file.");
+        });
+        settings.AddBranch("set", set =>
+        {
+            set.SetDescription("Update a single setting in place.");
+            set.AddCommand<SetEnvironmentCommand>("environment").WithDescription("Set the default repo (Environment) in the global settings.");
+            set.AddCommand<SetSolutionDirCommand>("solution-dir").WithDescription("Set PackagesSolutionDirectory for a repo.");
+        });
         settings.AddCommand<ValidateCommand>("validate").WithDescription("Validate a settings file without importing it.");
         settings.AddCommand<ViewSettingsCommand>("view").WithDescription("Show the imported settings.");
         settings.AddCommand<RemoveRepoCommand>("remove-repo").WithDescription("Remove an imported repo settings file.");

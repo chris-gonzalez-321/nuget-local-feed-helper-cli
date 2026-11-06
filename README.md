@@ -18,6 +18,10 @@ dotnet tool install --global --add-source ./nupkg NugetLocalFeed.Cli
 nuget-lf settings import global settings.user.json
 nuget-lf settings import repo settings.sob.json          # stored as "sob" (or pass --name)
 nuget-lf settings view
+nuget-lf settings refresh global                         # re-import from the last file imported
+nuget-lf settings refresh repo [name]                    # same for one repo (or all if omitted)
+nuget-lf settings set environment <repo-name>            # change the default repo in global settings
+nuget-lf settings set solution-dir <repo-name> <path>    # change a repo's PackagesSolutionDirectory
 nuget-lf settings validate <file.json> --type global|repo  # check a file without importing
 nuget-lf settings remove-repo <name>
 
@@ -30,6 +34,10 @@ For each package, `publish` runs `dotnet pack` (with symbols, at the configured 
 deletes any existing copy of that version from the local feed **and** the global packages
 cache (`NUGET_PACKAGES` or `~/.nuget/packages`) so stale files aren't used while debugging,
 then adds the new package to the feed as `<feed>/<id>/<version>/`.
+
+`refresh` re-reads the file path recorded at import time and re-validates it; if the file is now
+invalid, the stored settings are left unchanged. `set ...` edits the stored copy only, so a later
+`refresh` overwrites it with whatever is in the source file.
 
 Imported settings live in the OS app-data folder (`NUGET_LF_HOME` overrides it).
 

@@ -45,6 +45,7 @@ public sealed class ImportGlobalCommand : Command<SettingsFileSettings>
 
             var store = SettingsStore.CreateDefault();
             store.SaveGlobal(result.Value!);
+            store.RecordGlobalSource(settings.File);
             AnsiConsole.MarkupLineInterpolated($"[green]Imported global settings[/] -> {store.GlobalPath}");
             return 0;
         }
@@ -79,6 +80,7 @@ public sealed class ImportRepoCommand : Command<ImportRepoSettings>
 
             var store = SettingsStore.CreateDefault();
             store.SaveRepo(name, result.Value!);
+            store.RecordRepoSource(name, settings.File);
             AnsiConsole.MarkupLineInterpolated($"[green]Imported repo settings[/] '{name.ToLowerInvariant()}' ({result.Value!.Packages!.Count} packages)");
             return 0;
         }
